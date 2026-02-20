@@ -520,7 +520,41 @@
     </style>
 </head>
 <body>
+<div id="pantalla-login" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--header-bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white;">
+    <h1 style="font-family: 'Grand Hotel', cursive; font-size: 4rem; margin-bottom: 10px;">Pancomiddo</h1>
+    <p style="margin-bottom: 20px;">Acceso restringido al personal</p>
+    
+    <input type="password" id="input-clave" placeholder="Ingresar clave..." style="width: 250px; text-align: center; font-size: 1.2rem; padding: 15px; border-radius: 8px; border: none; margin-bottom: 15px;">
+    
+    <button onclick="verificarClave()" style="background-color: var(--primary); color: white; border: none; padding: 15px 30px; font-size: 1.2rem; font-weight: bold; border-radius: 8px; cursor: pointer;">
+        ENTRAR 🔓
+    </button>
+</div>
 
+<script>
+    // La clave secreta de tu local (podés cambiarla por la que quieras)
+    const CLAVE_SECRETA = "Nina&Wenchu";
+
+    function verificarClave() {
+        const intento = document.getElementById('input-clave').value;
+        if (intento === CLAVE_SECRETA) {
+            // Si es correcta, ocultamos la pantalla negra
+            document.getElementById('pantalla-login').style.display = 'none';
+        } else {
+            alert("❌ Clave incorrecta. Intente de nuevo.");
+            document.getElementById('input-clave').value = '';
+        }
+    }
+
+    // Permitir entrar apretando la tecla "Enter"
+    document.getElementById('input-clave').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            verificarClave();
+        }
+    });
+</script>
+
+    
 <button onclick="subirTodoASupabase()" style="background: var(--primary); color: white; padding: 20px; width: 100%; font-size: 1.5rem; font-weight: bold; border: none; cursor: pointer;">
     🚀 CLIC AQUÍ PARA SUBIR CLIENTES Y PRODUCTOS A SUPABASE 🚀
 </button>
@@ -2005,3 +2039,4 @@ async function subirTodoASupabase() {
 </script>
 </body>
 </html>
+
