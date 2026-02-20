@@ -21,17 +21,23 @@ app.post('/guardar-venta', async (req, res) => {
     const venta = req.body;
     console.log("¡Nueva venta recibida desde el HTML!", venta);
     
-    // Guardamos en la tabla 'sales' de Supabase
+// Guardamos en la tabla 'sales' de Supabase
     const { data, error } = await supabase
         .from('sales')
         .insert([
             { 
                 client: venta.cliente, 
                 total: venta.total, 
-                payment_method: venta.metodoPago 
+                payment_method: venta.metodoPago,
+                type: venta.tipo,
+                details: venta.detalles,
+                items: venta.items,
+                note: venta.nota,
+                pickup_info: venta.infoRetiro,
+                picked_up: venta.entregado
             }
         ]);
-
+    
     if (error) {
         console.error("Error guardando en la caja fuerte:", error);
         return res.status(500).json({ error: "Fallo al guardar en BD" });
@@ -44,3 +50,4 @@ app.post('/guardar-venta', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
+
