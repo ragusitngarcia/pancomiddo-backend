@@ -1,24 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <!-- =========================================================
-      BLOQUE 1: METADATOS DEL DOCUMENTO Y DEPENDENCIAS EXTERNAS
-      - Define codificación, viewport, título y librerías externas
-    ========================================================== -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM Pancomiddo v22.0 (Alias Correcto)</title>
+    <title>Pancomiddo Ventas</title>
 
-    <!-- Fuente para el logo de Pancomiddo -->
     <link href="https://fonts.googleapis.com/css2?family=Grand+Hotel&display=swap" rel="stylesheet">
 
-    <!-- SheetJS para import/export Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
-    <!-- =========================================================
-      BLOQUE 2: ESTILOS GENERALES (UI / UX)
-      - Paleta de colores y estilos base de la interfaz
-    ========================================================== -->
     <style>
         :root {
             --primary: #d35400;
@@ -116,10 +106,6 @@
             transition: 0.2s;
         }
 
-        .btn-backup { background-color: var(--blue); }
-        .btn-restore { background-color: #7f8c8d; }
-        .btn-reset { background-color: var(--red); }
-
         .container {
             padding: 20px;
             max-width: 1200px;
@@ -188,23 +174,11 @@
             border: none;
         }
 
-        .btn-edit {
-            background: #f39c12;
-            margin-right: 3px;
-        }
+        .btn-edit { background: #f39c12; margin-right: 3px; }
+        .btn-del { background: #e74c3c; }
+        .btn-msg { background: #34495e; margin-right: 3px; }
 
-        .btn-del {
-            background: #e74c3c;
-        }
-
-        .btn-msg {
-            background: #34495e;
-            margin-right: 3px;
-        }
-
-        input,
-        select,
-        textarea {
+        input, select, textarea {
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -326,8 +300,7 @@
             border-collapse: collapse;
         }
 
-        th,
-        td {
+        th, td {
             padding: 10px;
             text-align: left;
             border-bottom: 1px solid #eee;
@@ -508,18 +481,13 @@
         }
 
         @keyframes slideUp {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
     </style>
 </head>
 <body>
+
 <div id="pantalla-login" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--header-bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white;">
     <h1 style="font-family: 'Grand Hotel', cursive; font-size: 4rem; margin-bottom: 10px;">Pancomiddo</h1>
     <p style="margin-bottom: 20px;">Acceso restringido al personal</p>
@@ -532,13 +500,11 @@
 </div>
 
 <script>
-    // La clave secreta de tu local (podés cambiarla por la que quieras)
     const CLAVE_SECRETA = "Nina&Wenchu";
 
     function verificarClave() {
         const intento = document.getElementById('input-clave').value;
         if (intento === CLAVE_SECRETA) {
-            // Si es correcta, ocultamos la pantalla negra
             document.getElementById('pantalla-login').style.display = 'none';
         } else {
             alert("❌ Clave incorrecta. Intente de nuevo.");
@@ -546,48 +512,33 @@
         }
     }
 
-    // Permitir entrar apretando la tecla "Enter"
     document.getElementById('input-clave').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             verificarClave();
         }
     });
+
+    async function subirTodoASupabase() {
+        if(!confirm("¿Empezar a copiar todos los clientes y productos a la nube?")) return;
+        
+        for (let c of db.clients) {
+            await fetch('https://pancomiddo-backend.onrender.com/migrar-cliente', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(c)
+            });
+        }
+
+        for (let p of db.products) {
+            await fetch('https://pancomiddo-backend.onrender.com/migrar-producto', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(p)
+            });
+        }
+        alert("¡Migración completa! Revisa las tablas en Supabase.");
+    }
 </script>
 
-    
-<button onclick="subirTodoASupabase()" style="background: var(--primary); color: white; padding: 20px; width: 100%; font-size: 1.5rem; font-weight: bold; border: none; cursor: pointer;">
-    🚀 CLIC AQUÍ PARA SUBIR CLIENTES Y PRODUCTOS A SUPABASE 🚀
-</button>
-
-<script>
-async function subirTodoASupabase() {
-    if(!confirm("¿Empezar a copiar todos los clientes y productos a la nube?")) return;
-    
-    // Subir Clientes
-    for (let c of db.clients) {
-        await fetch('https://pancomiddo-backend.onrender.com/migrar-cliente', {
-            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(c)
-        });
-    }
-
-    // Subir Productos
-    for (let p of db.products) {
-        await fetch('https://pancomiddo-backend.onrender.com/migrar-producto', {
-            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(p)
-        });
-    }
-
-    alert("¡Migración completa! Revisa las tablas en Supabase.");
-}
-</script>
-
-<!-- =============================================================
-  BLOQUE 3: HEADER PRINCIPAL (Logo, navegación y acciones de admin)
-============================================================== -->
 <header>
     <div class="logo">Pancomiddo</div>
 
-    <!-- NAV PRINCIPAL - Botones para cambiar de sección -->
     <nav>
         <button data-section="pos" onclick="showSection('pos', this)" class="active">🛒 Venta</button>
         <button data-section="cocina" onclick="showSection('cocina', this)">🧑‍🍳 Cocina</button>
@@ -597,133 +548,72 @@ async function subirTodoASupabase() {
         <button data-section="clientes" onclick="showSection('clientes', this)">👥 Clientes</button>
     </nav>
 
-    <!-- CONTROLES ADMIN - Backup, restore y reset semanal -->
     <div class="admin-controls">
-        <button onclick="backupWeek()" class="btn-header btn-backup">💾 Cierre Semana (Crear BackUp)</button>
-        <button onclick="document.getElementById('restore-file').click()" class="btn-header btn-restore">🔄 Cargar Backup</button>
-        <button onclick="resetWeek()" class="btn-header btn-reset">✨ Nueva Semana (Borrar Pedidos)</button>
+        <button onclick="subirTodoASupabase()" class="btn-header" style="background-color: var(--orange);">🚀 Migrar a Nube</button>
     </div>
 </header>
 
-<!-- =============================================================
-  BLOQUE 4: INPUTS OCULTOS PARA IMPORT/RESTORE DE ARCHIVOS
-============================================================== -->
-<input type="file" id="restore-file" style="display:none" onchange="restoreData(this)">
 <input type="file" id="import-clients-file" style="display:none" accept=".xlsx, .xls" onchange="importClientsXLSX(this)">
 <input type="file" id="import-products-file" style="display:none" accept=".xlsx, .xls" onchange="importProductsXLSX(this)">
 <input type="file" id="import-sales-file" style="display:none" accept=".xlsx, .xls" onchange="importSalesXLSX(this)">
 
-<!-- =============================================================
-  BLOQUE 5: CONTENEDOR PRINCIPAL DE SECCIONES (POS, Cocina, etc.)
-============================================================== -->
 <div class="container">
 
-    <!-- ---------------------------------------------------------
-       SECCIÓN POS: PUNTO DE VENTA Y GESTIÓN DE TICKET ACTUAL
-    ---------------------------------------------------------- -->
     <div id="pos" class="section active">
         <div class="pos-container">
-            <!-- Columna izquierda: buscador + grilla de productos -->
             <div>
                 <input type="text" placeholder="🔍 Buscar producto..." onkeyup="renderProductsPOS(this.value)">
                 <div id="pos-products-grid" class="product-grid"></div>
             </div>
 
-            <!-- Columna derecha: carrito, cliente y cobro -->
             <div class="card" style="height: fit-content; position: sticky; top: 90px;">
                 <h3 style="margin-top:0">Ticket Actual</h3>
 
-                <!-- Banner visible solo cuando se edita un pedido previo -->
                 <div id="editing-banner">
-                    ⚠️ MODO EDICIÓN ⚠️
-                    <br>
-                    <span style="font-size:0.8rem; font-weight:normal">
-                        Estás modificando un pedido anterior.
-                    </span>
-                    <br>
+                    ⚠️ MODO EDICIÓN ⚠️<br>
+                    <span style="font-size:0.8rem; font-weight:normal">Estás modificando un pedido anterior.</span><br>
                     <a href="#" onclick="cancelEditMode()" style="font-size:0.8rem;">Cancelar</a>
                 </div>
 
-                <!-- Selector/buscador de cliente para el ticket actual -->
                 <div class="client-search-wrapper">
                     <label style="font-size:0.85rem; color:#888;">Cliente:</label>
-                    <input
-                        type="text"
-                        id="pos-client-search"
-                        placeholder="👤 Buscar Cliente..."
-                        onkeyup="filterClientSearch()"
-                        onclick="toggleClientList()"
-                        autocomplete="off"
-                    >
+                    <input type="text" id="pos-client-search" placeholder="👤 Buscar Cliente..." onkeyup="filterClientSearch()" onclick="toggleClientList()" autocomplete="off">
                     <div id="pos-client-list" class="client-dropdown"></div>
                 </div>
 
-                <!-- Lista de ítems del carrito -->
                 <div id="cart-list" style="min-height: 150px; max-height: 400px; overflow-y: auto;">
                     <p style="text-align:center; color:#999; margin-top:50px">Carrito vacío</p>
                 </div>
 
-                <!-- Total del carrito -->
                 <div class="cart-total-display">
                     <span id="cart-total">$ 0</span>
                 </div>
 
-                <!-- Botones principales de acción sobre el ticket -->
-                <button
-                    onclick="openCheckoutModal()"
-                    id="btn-checkout-main"
-                    class="btn btn-success"
-                    style="width: 100%; padding: 15px; font-size: 1.2rem;"
-                >
-                    💵 COBRAR
-                </button>
-
-                <button
-                    onclick="clearCart()"
-                    class="btn btn-danger"
-                    style="width: 100%; margin-top: 10px;"
-                >
-                    🗑️ Limpiar
-                </button>
+                <button onclick="openCheckoutModal()" id="btn-checkout-main" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1.2rem;">💵 COBRAR</button>
+                <button onclick="clearCart()" class="btn btn-danger" style="width: 100%; margin-top: 10px;">🗑️ Limpiar</button>
             </div>
         </div>
     </div>
 
-    <!-- ---------------------------------------------------------
-       SECCIÓN COCINA: PRODUCCIÓN Y GESTIÓN DE RETIROS
-    ---------------------------------------------------------- -->
     <div id="cocina" class="section">
-        <!-- Resumen de producción (sumatoria de productos Take Away) -->
         <div class="card">
             <h2>🔥 A Producir</h2>
             <div id="kitchen-summary" class="production-summary"></div>
         </div>
 
-        <!-- Pedidos pendientes de retiro -->
         <div class="card">
             <h3>⏳ Pendiente de Retiro</h3>
-            <input
-                type="text"
-                id="kitchen-search"
-                placeholder="🔍 Buscar pedido..."
-                onkeyup="renderKitchen()"
-                style="background:#fff8e1; border-color:#f39c12; font-weight:bold;"
-            >
+            <input type="text" id="kitchen-search" placeholder="🔍 Buscar pedido..." onkeyup="renderKitchen()" style="background:#fff8e1; border-color:#f39c12; font-weight:bold;">
             <div id="kitchen-orders-pending"></div>
         </div>
 
-        <!-- Pedidos ya retirados (histórico reciente) -->
         <div class="card" style="background-color: #f4f6f7; opacity: 0.9;">
             <h3>✅ Ya Retirado</h3>
             <div id="kitchen-orders-completed"></div>
         </div>
     </div>
 
-    <!-- ---------------------------------------------------------
-       SECCIÓN VENTAS: CIERRE DE CAJA Y HISTORIAL
-    ---------------------------------------------------------- -->
     <div id="ventas" class="section">
-        <!-- Controles de export/import de historial de ventas -->
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h3 style="margin:0">Gestión de Ventas</h3>
@@ -734,7 +624,6 @@ async function subirTodoASupabase() {
             </div>
         </div>
 
-        <!-- Resumen de cierre de caja del día (por medio de pago) -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top:20px;">
             <h2>💰 Cierre de Caja (Hoy)</h2>
             <h2 id="grand-total" style="color: var(--primary); font-size: 2rem;">$ 0</h2>
@@ -759,20 +648,13 @@ async function subirTodoASupabase() {
             </div>
         </div>
 
-        <!-- Tabla de historial de pedidos (últimos 100) -->
         <div class="card">
             <h3>Historial de Pedidos</h3>
             <div style="overflow-x:auto;">
                 <table>
                     <thead>
                         <tr>
-                            <th>Fecha/Hora</th>
-                            <th>Tipo</th>
-                            <th>Cliente</th>
-                            <th>Detalle</th>
-                            <th>Total</th>
-                            <th>Pago</th>
-                            <th>Acciones</th>
+                            <th>Fecha/Hora</th><th>Tipo</th><th>Cliente</th><th>Detalle</th><th>Total</th><th>Pago</th><th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="sales-table-body"></tbody>
@@ -781,31 +663,17 @@ async function subirTodoASupabase() {
         </div>
     </div>
 
-    <!-- ---------------------------------------------------------
-       SECCIÓN INFORMES: TOP PRODUCTOS Y CLIENTES
-    ---------------------------------------------------------- -->
     <div id="informes" class="section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h2>📈 Informes</h2>
         </div>
-
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
-            <div class="card">
-                <h3>🏆 Top 5 Productos</h3>
-                <div id="report-top-products"></div>
-            </div>
-            <div class="card">
-                <h3>⭐ Top 5 Clientes</h3>
-                <div id="report-top-clients"></div>
-            </div>
+            <div class="card"><h3>🏆 Top 5 Productos</h3><div id="report-top-products"></div></div>
+            <div class="card"><h3>⭐ Top 5 Clientes</h3><div id="report-top-clients"></div></div>
         </div>
     </div>
 
-    <!-- ---------------------------------------------------------
-       SECCIÓN PRODUCTOS: CRUD LISTA DE PRECIOS
-    ---------------------------------------------------------- -->
     <div id="productos" class="section">
-        <!-- Toolbar productos (import/export + alta rápida) -->
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h3 style="margin:0">Productos</h3>
@@ -814,29 +682,19 @@ async function subirTodoASupabase() {
                     <button onclick="document.getElementById('import-products-file').click()" class="btn btn-info" style="font-size:0.8rem; padding:5px 10px;">📥 Importar Excel</button>
                 </div>
             </div>
-
             <input type="text" placeholder="🔍 Buscar..." onkeyup="renderProductsTable(this.value)">
-
             <div style="margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
                 <input type="text" id="prod-name" placeholder="Nuevo Nombre">
                 <input type="number" id="prod-price" placeholder="Precio">
                 <button onclick="addProduct()" class="btn btn-primary">Guardar</button>
             </div>
         </div>
-
-        <!-- Tabla de productos -->
         <div class="card">
-            <table>
-                <tbody id="products-table-body"></tbody>
-            </table>
+            <table><tbody id="products-table-body"></tbody></table>
         </div>
     </div>
 
-    <!-- ---------------------------------------------------------
-       SECCIÓN CLIENTES: CRUD LISTA DE CLIENTES
-    ---------------------------------------------------------- -->
     <div id="clientes" class="section">
-        <!-- Toolbar clientes (import/export + alta rápida) -->
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h3 style="margin:0">Clientes</h3>
@@ -845,29 +703,20 @@ async function subirTodoASupabase() {
                     <button onclick="document.getElementById('import-clients-file').click()" class="btn btn-info" style="font-size:0.8rem; padding:5px 10px;">📥 Importar Excel</button>
                 </div>
             </div>
-
             <input type="text" placeholder="🔍 Buscar..." onkeyup="renderClientsTable(this.value)">
-
             <div style="margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
                 <input type="text" id="client-name" placeholder="Nuevo Nombre">
                 <input type="text" id="client-phone" placeholder="Tel/IG">
                 <button onclick="addClient()" class="btn btn-primary">Guardar</button>
             </div>
         </div>
-
-        <!-- Tabla de clientes -->
         <div class="card">
-            <table>
-                <tbody id="clients-table-body"></tbody>
-            </table>
+            <table><tbody id="clients-table-body"></tbody></table>
         </div>
     </div>
 
 </div>
 
-<!-- =============================================================
-  BLOQUE 6: MODAL DE CHECKOUT (Cobro / Registro de venta)
-============================================================== -->
 <div id="modal-checkout" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
@@ -875,13 +724,11 @@ async function subirTodoASupabase() {
             <span onclick="closeCheckout()" style="cursor:pointer; color:#999; font-size:1.5rem;">✕</span>
         </div>
 
-        <!-- Tabs para tipo de venta (Mostrador vs Take Away) -->
         <div class="checkout-tabs" id="checkout-tabs-container">
             <div class="tab-btn active" id="tab-mostrador" onclick="setSaleType('Mostrador')">🛒 MOSTRADOR (Ya)</div>
             <div class="tab-btn" id="tab-takeaway" onclick="setSaleType('TakeAway')">🥡 TAKE AWAY (Pedido)</div>
         </div>
 
-        <!-- Datos extra para pedidos Take Away -->
         <div id="takeaway-options" style="display:none; background:#fef9e7; padding:15px; border-radius:8px; margin-bottom:15px;">
             <label style="font-size:0.9rem; font-weight:bold;">📅 Fecha y Hora de Retiro:</label>
             <div style="display:flex; gap:10px;">
@@ -890,12 +737,10 @@ async function subirTodoASupabase() {
             </div>
         </div>
 
-        <!-- Total del ticket en el modal -->
         <div style="text-align:center; margin-bottom:15px; font-size:1.4rem;">
             Total: <b style="color:var(--primary)"><span id="checkout-total">$ 0</span></b>
         </div>
 
-        <!-- Selección de método de pago -->
         <p style="margin-bottom:5px; color:#666; font-size:0.9rem;">Forma de Pago:</p>
         <div class="payment-grid">
             <div class="pm-btn selected" data-method="Efectivo" onclick="selectPayment('Efectivo', this)">💵 Efectivo</div>
@@ -904,10 +749,8 @@ async function subirTodoASupabase() {
             <div class="pm-btn" data-method="Pendiente" onclick="selectPayment('Pendiente', this)">⏳ Pendiente</div>
         </div>
 
-        <!-- Nota opcional de la venta -->
         <textarea id="sale-note" rows="2" placeholder="Notas..."></textarea>
 
-        <!-- Calculadora de vuelto (solo para efectivo) -->
         <div id="cash-calculator" style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px;">
             <div class="calc-row">
                 <span>Abona con:</span>
@@ -919,21 +762,10 @@ async function subirTodoASupabase() {
             </div>
         </div>
 
-        <!-- Botón principal para confirmar o actualizar venta -->
-        <button
-            onclick="finalizeSale()"
-            id="btn-final-confirm"
-            class="btn btn-success"
-            style="width:100%; padding:15px; font-size:1.2rem;"
-        >
-            ✅ CONFIRMAR
-        </button>
+        <button onclick="finalizeSale()" id="btn-final-confirm" class="btn btn-success" style="width:100%; padding:15px; font-size:1.2rem;">✅ CONFIRMAR</button>
     </div>
 </div>
 
-<!-- =============================================================
-  BLOQUE 7: MODAL NUEVO CLIENTE (Alta rápida desde el POS)
-============================================================== -->
 <div id="modal-new-client" class="modal">
     <div class="modal-content">
         <h2>Nuevo Cliente</h2>
@@ -944,9 +776,6 @@ async function subirTodoASupabase() {
     </div>
 </div>
 
-<!-- =============================================================
-  BLOQUE 8: MODAL MENSAJE PARA CLIENTE (Texto de WhatsApp)
-============================================================== -->
 <div id="modal-msg" class="modal">
     <div class="modal-content">
         <h3>💬 Mensaje para Cliente</h3>
@@ -956,26 +785,11 @@ async function subirTodoASupabase() {
     </div>
 </div>
 
-<!-- =============================================================
-  BLOQUE 9: LÓGICA DEL CRM / POS (JavaScript principal)
-============================================================== -->
 <script>
-    // -------------------------------------------------------------
-    // 9.1 UTILIDADES BÁSICAS Y DATOS POR DEFECTO
-    // -------------------------------------------------------------
+    const formatMoney = (a) => a.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 });
 
-    // Formatea números a moneda ARS sin decimales
-    const formatMoney = (a) =>
-        a.toLocaleString('es-AR', {
-            style: 'currency',
-            currency: 'ARS',
-            minimumFractionDigits: 0
-        });
-
-    // Lista de productos por defecto (solo primera carga)
     const defaultProducts = [{'id': 100, 'name': 'Aceite de Oliva', 'price': 23000.0}, {'id': 101, 'name': 'Alfajores de Almendras', 'price': 2500.0}, {'id': 102, 'name': 'Alfajores de Dulce de Leche', 'price': 800.0}, {'id': 103, 'name': 'Alfajores de Maicena', 'price': 2000.0}, {'id': 104, 'name': 'Berenjenas en Escabeche', 'price': 7000.0}, {'id': 105, 'name': 'Brownie con Nuez', 'price': 1100.0}, {'id': 106, 'name': 'Brownie sin Nuez', 'price': 1000.0}, {'id': 107, 'name': 'Budín de Limón', 'price': 7000.0}, {'id': 108, 'name': 'Budín de Naranja', 'price': 7000.0}, {'id': 109, 'name': 'Budín de Naranja y Chocolate', 'price': 7000.0}, {'id': 110, 'name': 'Caja de Alfajores Surtidos', 'price': 3000.0}, {'id': 111, 'name': 'Chipá', 'price': 6000.0}, {'id': 112, 'name': 'Chocotorta', 'price': 7000.0}, {'id': 113, 'name': 'Cookie Nutella', 'price': 3500.0}, {'id': 114, 'name': 'Cookie NYC', 'price': 3000.0}, {'id': 115, 'name': 'Cuadrado Coco y DDL', 'price': 5000.0}, {'id': 116, 'name': 'Cuadrado de Coco', 'price': 5000.0}, {'id': 117, 'name': 'Cuadrado de Rogel', 'price': 7000.0}, {'id': 118, 'name': 'Cuadrados de Limón', 'price': 400.0}, {'id': 119, 'name': 'Docena de Carne Copetín', 'price': 23000.0}, {'id': 120, 'name': 'Docena de Verdura Copetín', 'price': 23000.0}, {'id': 121, 'name': 'Dulce de Durazno', 'price': 6000.0}, {'id': 122, 'name': 'Dulce de Frutilla', 'price': 6000.0}, {'id': 123, 'name': 'Dulce de Naranja', 'price': 5300.0}, {'id': 124, 'name': 'Empanadas de Carne', 'price': 1800.0}, {'id': 125, 'name': 'Empanadas de Verdura', 'price': 1800.0}, {'id': 126, 'name': 'Focaccia', 'price': 8000.0}, {'id': 127, 'name': 'Galletitas Cruz', 'price': 500.0}, {'id': 128, 'name': 'Macarons', 'price': 3000.0}, {'id': 129, 'name': 'Marquise DDL Crema y Frutos Rojos', 'price': 17000.0}, {'id': 130, 'name': 'Masitas Sablée', 'price': 300.0}, {'id': 131, 'name': 'Miel', 'price': 6000.0}, {'id': 132, 'name': 'Mousse de Chocolate', 'price': 7800.0}, {'id': 133, 'name': 'Muffin de Arándanos', 'price': 3500.0}, {'id': 134, 'name': 'Muffin de Vainilla', 'price': 3000.0}, {'id': 135, 'name': 'Pan Blanco', 'price': 7000.0}, {'id': 136, 'name': 'Pan Integral', 'price': 7000.0}, {'id': 137, 'name': 'Pastafrola de Batata', 'price': 4800.0}, {'id': 138, 'name': 'Pepinillos', 'price': 7000.0}, {'id': 139, 'name': 'Porción de Rogel', 'price': 7500.0}, {'id': 140, 'name': 'Postre Franui', 'price': 7500.0}, {'id': 141, 'name': 'Postre Tiramisú', 'price': 7500.0}, {'id': 142, 'name': 'Rogel', 'price': 7000.0}, {'id': 143, 'name': 'Rogel Grande', 'price': 54000.0}, {'id': 144, 'name': 'Roll de Canela', 'price': 5000.0}, {'id': 145, 'name': 'Scones de Queso', 'price': 6000.0}, {'id': 146, 'name': 'Torta Chocolate', 'price': 20000.0}, {'id': 147, 'name': 'Torta Grande Bariloche', 'price': 58000.0}, {'id': 148, 'name': 'Torta Grande Key Lime Pie', 'price': 58000.0}, {'id': 149, 'name': 'Torta Grande Lemon Pie', 'price': 58000.0}, {'id': 150, 'name': 'Torta Grande Marquise Franui', 'price': 58000.0}, {'id': 151, 'name': 'Torta Grande Matilda', 'price': 58000.0}, {'id': 152, 'name': 'Torta Grande Pancomiddo', 'price': 58000.0}, {'id': 153, 'name': 'Torta Grande Pancomiddo Duraznos', 'price': 58000.0}, {'id': 154, 'name': 'Torta Mediana Bariloche', 'price': 44000.0}, {'id': 155, 'name': 'Torta Mediana Marquise Franui', 'price': 45000.0}, {'id': 156, 'name': 'Torta Mediana Pancomiddo Frutillas', 'price': 46000.0}, {'id': 157, 'name': 'Tortita Marquise', 'price': 13000.0}, {'id': 158, 'name': 'Tortita Marquise Franui', 'price': 18000.0}, {'id': 159, 'name': 'Tortita Rogel', 'price': 13000.0}];
 
-    // Lista de clientes por defecto (solo primera carga)
     const defaultClients = [
         {'id': 1000, 'name': 'Abu', 'phone': ''}, {'id': 1001, 'name': 'Adriana Casaretto', 'phone': ''}, {'id': 1002, 'name': 'Agus Y Clari', 'phone': ''}, {'id': 1003, 'name': 'Agus Y Matu', 'phone': ''}, {'id': 1004, 'name': 'Agustina Pereira', 'phone': ''},
         {'id': 1005, 'name': 'Albert', 'phone': ''}, {'id': 1006, 'name': 'Ale Serrani', 'phone': ''}, {'id': 1007, 'name': 'Alejandra Bojorge', 'phone': ''}, {'id': 1008, 'name': 'Ali Santana', 'phone': ''}, {'id': 1009, 'name': 'Alita', 'phone': ''},
@@ -1006,47 +820,25 @@ async function subirTodoASupabase() {
         {'id': 1130, 'name': 'Victoria Saubidet', 'phone': ''}, {'id': 1131, 'name': 'Vir', 'phone': ''}, {'id': 1132, 'name': 'Virginia', 'phone': ''}, {'id': 1133, 'name': 'Vivi Ferreira', 'phone': ''}, {'id': 1134, 'name': 'Yesica', 'phone': ''}
     ];
 
-    // -------------------------------------------------------------
-    // 9.2 BASE DE DATOS LOCAL (localStorage)
-    // -------------------------------------------------------------
-
-    // Importante: se mantienen las claves v18 para no perder datos previos
     let savedProds   = JSON.parse(localStorage.getItem('pan_prods_v18'))   || defaultProducts;
     let savedClients = JSON.parse(localStorage.getItem('pan_clients_v18')) || defaultClients;
     let savedSales   = JSON.parse(localStorage.getItem('pan_sales_v18'))   || [];
 
-    let db = {
-        products: savedProds,
-        clients: savedClients,
-        sales: savedSales
-    };
+    let db = { products: savedProds, clients: savedClients, sales: savedSales };
 
-    // Normalización de ventas antiguas (pickedUp y timestamp)
     db.sales.forEach(s => {
-        if (s.pickedUp === undefined) {
-            s.pickedUp = (s.type === 'Mostrador');
-        }
-        if (!s.timestamp) {
-            // Si no hay timestamp guardado, intentamos usar la fecha o usamos ahora
-            s.timestamp = s.date ? new Date(s.date) : new Date();
-        } else {
-            s.timestamp = new Date(s.timestamp);
-        }
+        if (s.pickedUp === undefined) s.pickedUp = (s.type === 'Mostrador');
+        if (!s.timestamp) s.timestamp = s.date ? new Date(s.date) : new Date();
+        else s.timestamp = new Date(s.timestamp);
     });
 
-    // -------------------------------------------------------------
-    // 9.3 ESTADO GLOBAL (carrito, método de pago, etc.)
-    // -------------------------------------------------------------
-    let cart = {};                             // Carrito actual (idProducto -> cantidad)
-    let currentPaymentMethod = 'Efectivo';     // Método de pago seleccionado
-    let currentCheckoutTotal = 0;              // Total actual del ticket
-    let saleType = 'Mostrador';                // Tipo de venta: Mostrador | TakeAway
-    let pendingOrderIdToPay = null;            // ID de pedido pendiente al que se le cobra deuda
-    let editingSaleId = null;                  // ID de la venta que se está editando (modo edición)
+    let cart = {};                             
+    let currentPaymentMethod = 'Efectivo';     
+    let currentCheckoutTotal = 0;              
+    let saleType = 'Mostrador';                
+    let pendingOrderIdToPay = null;            
+    let editingSaleId = null;                  
 
-    // -------------------------------------------------------------
-    // 9.4 INICIALIZACIÓN GENERAL DE LA APP
-    // -------------------------------------------------------------
     function init() {
         renderProductsPOS();
         renderProductsTable();
@@ -1057,7 +849,6 @@ async function subirTodoASupabase() {
         renderKitchen();
         renderAnalytics();
 
-        // Cierra el dropdown de clientes si se hace click fuera
         document.addEventListener('click', e => {
             if (!e.target.closest('.client-search-wrapper')) {
                 document.getElementById('pos-client-list').style.display = 'none';
@@ -1065,86 +856,22 @@ async function subirTodoASupabase() {
         });
     }
 
-    // Guarda el estado actual de la BD en localStorage
     function saveDB() {
         localStorage.setItem('pan_prods_v18', JSON.stringify(db.products));
         localStorage.setItem('pan_clients_v18', JSON.stringify(db.clients));
         localStorage.setItem('pan_sales_v18', JSON.stringify(db.sales));
     }
 
-    // -------------------------------------------------------------
-    // 9.5 NAVEGACIÓN ENTRE SECCIONES (tabs superiores)
-    // -------------------------------------------------------------
     function showSection(id, btn) {
-        // Oculta todas las secciones y muestra solo la elegida
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-
-        // Actualiza el estado visual de los botones de navegación
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-
-        // Si no se pasó el botón (llamado desde JS), lo buscamos por data-section
-        if (!btn) {
-            btn = document.querySelector(`nav button[data-section="${id}"]`);
-        }
-        if (btn) {
-            btn.classList.add('active');
-        }
-
-        // Refresca vistas que requieren cálculo al mostrarse
+        if (!btn) btn = document.querySelector(`nav button[data-section="${id}"]`);
+        if (btn) btn.classList.add('active');
         if (id === 'cocina') renderKitchen();
         if (id === 'informes') renderAnalytics();
     }
 
-    // -------------------------------------------------------------
-    // 9.6 BACKUP, RESTORE Y RESET SEMANAL
-    // -------------------------------------------------------------
-    function backupWeek() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
-        const a = document.createElement('a');
-        a.href = dataStr;
-        a.download = `Cierre_Semana_${new Date().toISOString().slice(0,10)}.json`;
-        a.click();
-    }
-
-    function resetWeek() {
-        const pwd = prompt('⚠️ ATENCIÓN: ESTO BORRARÁ TODOS LOS PEDIDOS.\n\nPara confirmar, escribe la contraseña: Pancomiddo');
-        if (pwd === "Pancomiddo") {
-            db.sales = [];
-            saveDB();
-            location.reload();
-        } else if (pwd !== null) {
-            alert("❌ Contraseña incorrecta. No se borró nada.");
-        }
-    }
-
-    function restoreData(input) {
-        const file = input.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                db = JSON.parse(e.target.result);
-                // Normalizar ventas restauradas
-                db.sales.forEach(s => {
-                    if (s.pickedUp === undefined) s.pickedUp = (s.type === 'Mostrador');
-                    if (!s.timestamp) s.timestamp = s.date ? new Date(s.date) : new Date();
-                    else s.timestamp = new Date(s.timestamp);
-                });
-                saveDB();
-                alert("✅ Restaurado.");
-                location.reload();
-            } catch {
-                alert("❌ Error.");
-            }
-        };
-        reader.readAsText(file);
-    }
-
-    // -------------------------------------------------------------
-    // 9.7 IMPORT / EXPORT CON EXCEL (SheetJS)
-    // -------------------------------------------------------------
     function exportSalesXLSX() {
         const data = db.sales.map(s => ({
             Fecha: s.date.split(',')[0],
@@ -1166,14 +893,12 @@ async function subirTodoASupabase() {
     function importSalesXLSX(input) {
         const file = input.files[0];
         if (!file) return;
-
         const reader = new FileReader();
         reader.readAsArrayBuffer(file);
         reader.onload = (e) => {
             const wb = XLSX.read(e.target.result, {type:'array'});
             const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
             let count = 0;
-
             data.forEach(row => {
                 const dateStr   = row['Fecha'] || '';
                 const timeStr   = row['Hora'] || '';
@@ -1213,7 +938,6 @@ async function subirTodoASupabase() {
                 db.sales.push(newSale);
                 count++;
             });
-
             saveDB();
             renderSalesTable();
             updateReport();
@@ -1223,18 +947,14 @@ async function subirTodoASupabase() {
     }
 
     function exportProductsXLSX() {
-        const ws = XLSX.utils.json_to_sheet(
-            db.products.map(p => ({ Producto: p.name, Precio: p.price }))
-        );
+        const ws = XLSX.utils.json_to_sheet(db.products.map(p => ({ Producto: p.name, Precio: p.price })));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Productos");
         XLSX.writeFile(wb, "Lista_Precios.xlsx");
     }
 
     function exportClientsXLSX() {
-        const ws = XLSX.utils.json_to_sheet(
-            db.clients.map(c => ({ Nombre: c.name, Telefono: c.phone }))
-        );
+        const ws = XLSX.utils.json_to_sheet(db.clients.map(c => ({ Nombre: c.name, Telefono: c.phone })));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Clientes");
         XLSX.writeFile(wb, "Lista_Clientes.xlsx");
@@ -1243,34 +963,26 @@ async function subirTodoASupabase() {
     function importProductsXLSX(input) {
         const file = input.files[0];
         if (!file) return;
-
         const reader = new FileReader();
         reader.readAsArrayBuffer(file);
         reader.onload = (e) => {
             const wb = XLSX.read(e.target.result, {type:'array'});
             const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
             let up = 0, nw = 0;
-
             data.forEach(row => {
                 const name  = row['Producto'] || row['Nombre'] || row['name'];
                 const price = row['Precio']   || row['Price']   || row['price'];
-
                 if (name && price) {
                     const ex = db.products.find(p => p.name === name);
                     if (ex) {
                         ex.price = parseFloat(price);
                         up++;
                     } else {
-                        db.products.push({
-                            id: Date.now() + Math.random(),
-                            name,
-                            price: parseFloat(price)
-                        });
+                        db.products.push({ id: Date.now() + Math.random(), name, price: parseFloat(price) });
                         nw++;
                     }
                 }
             });
-
             saveDB();
             renderProductsTable();
             renderProductsPOS();
@@ -1281,27 +993,20 @@ async function subirTodoASupabase() {
     function importClientsXLSX(input) {
         const file = input.files[0];
         if (!file) return;
-
         const reader = new FileReader();
         reader.readAsArrayBuffer(file);
         reader.onload = (e) => {
             const wb = XLSX.read(e.target.result, {type:'array'});
             const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
             let nw = 0;
-
             data.forEach(row => {
                 const name  = row['Nombre'] || row['Name'];
                 const phone = row['Telefono'] || row['Tel'] || row['Phone'] || '';
                 if (name && !db.clients.find(c => c.name === name)) {
-                    db.clients.push({
-                        id: Date.now() + Math.random(),
-                        name,
-                        phone
-                    });
+                    db.clients.push({ id: Date.now() + Math.random(), name, phone });
                     nw++;
                 }
             });
-
             saveDB();
             renderClientsTable();
             renderClientSearchList();
@@ -1309,9 +1014,6 @@ async function subirTodoASupabase() {
         };
     }
 
-    // -------------------------------------------------------------
-    // 9.8 POS: RENDER DE PRODUCTOS Y CARRITO
-    // -------------------------------------------------------------
     function renderProductsPOS(f = "") {
         const filtro = f.toLowerCase();
         document.getElementById('pos-products-grid').innerHTML = db.products
@@ -1338,14 +1040,13 @@ async function subirTodoASupabase() {
         if (editingSaleId && !confirm("¿Estás seguro? Perderás los cambios de la edición.")) return;
         cart = {};
         editingSaleId = null;
-        cancelEditMode(); // Limpieza visual de modo edición
+        cancelEditMode(); 
         renderCart();
     }
 
     function renderCart() {
         const l = document.getElementById('cart-list');
         let t = 0, h = '';
-
         for (const [id, q] of Object.entries(cart)) {
             const p = db.products.find(x => x.id == id);
             if (p) {
@@ -1360,15 +1061,11 @@ async function subirTodoASupabase() {
                     </div>`;
             }
         }
-
         l.innerHTML = h || '<p style="text-align:center;color:#999;margin-top:50px">Carrito vacío</p>';
         document.getElementById('cart-total').innerText = formatMoney(t);
         currentCheckoutTotal = t;
     }
 
-    // -------------------------------------------------------------
-    // 9.9 BUSCADOR Y SELECCIÓN DE CLIENTES (POS)
-    // -------------------------------------------------------------
     function filterClientSearch() {
         const term = document.getElementById('pos-client-search').value.toLowerCase();
         renderClientSearchList(term);
@@ -1392,19 +1089,13 @@ async function subirTodoASupabase() {
             <div class="client-option" onclick="selectClient('Mostrador')"><strong>Mostrador</strong></div>
             <div class="client-option" onclick="selectClient('NEW')"><strong>➕ NUEVO...</strong></div>
         `;
-        db.clients
-            .filter(c => c.name.toLowerCase().includes(f))
-            .forEach(c => {
-                h += `<div class="client-option" onclick="selectClient('${c.name}')">${c.name}</div>`;
-            });
+        db.clients.filter(c => c.name.toLowerCase().includes(f)).forEach(c => {
+            h += `<div class="client-option" onclick="selectClient('${c.name}')">${c.name}</div>`;
+        });
         document.getElementById('pos-client-list').innerHTML = h;
     }
 
-    // -------------------------------------------------------------
-    // 9.10 MODAL DE CHECKOUT Y LÓGICA DE COBRO
-    // -------------------------------------------------------------
     function openCheckoutModal(ex = null) {
-        // Caso: cobrar deuda de pedido pendiente (no se modifican ítems)
         if (ex) {
             pendingOrderIdToPay = ex.id;
             currentCheckoutTotal = ex.total;
@@ -1414,7 +1105,7 @@ async function subirTodoASupabase() {
             if (currentCheckoutTotal === 0) return alert("Vacío");
             pendingOrderIdToPay = null;
             document.getElementById('checkout-tabs-container').style.display = 'flex';
-            setSaleType(saleType); // Mantiene tipo actual (Mostrador/TakeAway)
+            setSaleType(saleType); 
         }
 
         document.getElementById('checkout-total').innerText = formatMoney(currentCheckoutTotal);
@@ -1422,20 +1113,17 @@ async function subirTodoASupabase() {
         document.getElementById('sale-note').value = ex ? (ex.note || '') : '';
         document.getElementById('change-display').innerText = '$ 0';
 
-        // Configuración visual del modal según sea nueva venta o edición
         if (editingSaleId) {
             document.getElementById('checkout-title').innerText = "✏️ Guardar Cambios";
             document.getElementById('btn-final-confirm').innerText = "💾 ACTUALIZAR PEDIDO";
             document.getElementById('btn-final-confirm').classList.remove('btn-success');
             document.getElementById('btn-final-confirm').classList.add('btn-primary');
-            // Selecciona el medio de pago original del pedido
             selectPayment(currentPaymentMethod);
         } else {
             document.getElementById('checkout-title').innerText = "Cobrar / Registrar";
             document.getElementById('btn-final-confirm').innerText = "✅ CONFIRMAR";
             document.getElementById('btn-final-confirm').classList.remove('btn-primary');
             document.getElementById('btn-final-confirm').classList.add('btn-success');
-            // Por defecto efectivo al generar una venta nueva
             selectPayment('Efectivo');
         }
 
@@ -1446,33 +1134,27 @@ async function subirTodoASupabase() {
     function setSaleType(t) {
         saleType = t;
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
         if (t === 'Mostrador') {
             document.getElementById('tab-mostrador').classList.add('active');
             document.getElementById('takeaway-options').style.display = 'none';
         } else {
             document.getElementById('tab-takeaway').classList.add('active');
             document.getElementById('takeaway-options').style.display = 'block';
-
             const d = new Date();
-            d.setDate(d.getDate() + ((6 + 7 - d.getDay()) % 7 || 7)); // Próximo sábado
+            d.setDate(d.getDate() + ((6 + 7 - d.getDay()) % 7 || 7)); 
             document.getElementById('pickup-date').value = d.toISOString().split('T')[0];
             document.getElementById('pickup-time').value = "09:30";
         }
     }
 
-    // Selección de método de pago, con soporte para llamada desde HTML (this) o desde JS puro
     function selectPayment(m, b = null) {
         currentPaymentMethod = m;
         const buttons = document.querySelectorAll('.pm-btn');
         buttons.forEach(x => x.classList.remove('selected'));
-
-        // Si no viene botón explícito, tratamos de localizarlo por data-method
         if (!b) {
             b = Array.from(buttons).find(btn => btn.getAttribute('data-method') === m) || buttons[0];
         }
         if (b) b.classList.add('selected');
-
         document.getElementById('cash-calculator').style.display = (m === 'Efectivo') ? 'block' : 'none';
     }
 
@@ -1495,13 +1177,11 @@ async function subirTodoASupabase() {
     }
 
     function finalizeSale() {
-        // Validación de efectivo (no permitir monto insuficiente)
         if (currentPaymentMethod === 'Efectivo') {
             const pagado = parseFloat(document.getElementById('amount-paid').value) || 0;
             if (pagado < currentCheckoutTotal) return alert("Monto insuficiente");
         }
 
-        // Pagar deuda pendiente (solo cambia método, nota y estado)
         if (pendingOrderIdToPay) {
             const idx = db.sales.findIndex(s => s.id === pendingOrderIdToPay);
             if (idx !== -1) {
@@ -1518,27 +1198,20 @@ async function subirTodoASupabase() {
             return;
         }
 
-        // Datos para nueva venta o actualización
         let cli = document.getElementById('pos-client-search').value || "Mostrador";
         
-        // --- MAGIA NUEVA: Buscamos el ID numérico del cliente para la BD ---
+        // --- BUSCAMOS EL ID NUMÉRICO DEL CLIENTE PARA LA BD ---
         let clienteObjeto = db.clients.find(c => c.name === cli);
         let clienteId = clienteObjeto ? clienteObjeto.id : null; 
-        // ------------------------------------------------------------------
-
+        
         let items = [];
         let det = [];
 
         for (const [id, q] of Object.entries(cart)) {
             const p = db.products.find(x => x.id == id);
             if (p) {
-                // --- MAGIA NUEVA: Mandamos ID y Precio para la nube, pero dejamos el Nombre para tu HTML local ---
-                items.push({ 
-                    id: p.id, 
-                    price: p.price, 
-                    name: p.name, 
-                    qty: q 
-                });
+                // --- MANDAMOS ID Y PRECIO PARA LA NUBE, PERO DEJAMOS EL NOMBRE PARA EL HTML ---
+                items.push({ id: p.id, price: p.price, name: p.name, qty: q });
                 det.push(`${p.name} (x${q})`);
             }
         }
@@ -1553,7 +1226,6 @@ async function subirTodoASupabase() {
         const noteText = document.getElementById('sale-note').value;
 
         if (editingSaleId) {
-            // --- Actualización de venta existente ---
             const idx = db.sales.findIndex(s => s.id === editingSaleId);
             if (idx !== -1) {
                 db.sales[idx].client  = cli;
@@ -1571,7 +1243,6 @@ async function subirTodoASupabase() {
             }
             alert("✅ Pedido Actualizado");
         } else {
-            // --- Nueva venta ---
             db.sales.unshift({
                 id: Date.now(),
                 date: new Date().toLocaleString(),
@@ -1592,20 +1263,18 @@ async function subirTodoASupabase() {
 
         saveDB();
 
-        // --- ENVÍO AL SERVIDOR EN RENDER (NUEVO FORMATO RELACIONAL) ---
+        // --- ENVÍO AL SERVIDOR EN RENDER ---
         fetch('https://pancomiddo-backend.onrender.com/guardar-venta', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                cliente_id: clienteId, // <-- Ahora viaja el número de ID secreto
+                cliente_id: clienteId, 
                 total: currentCheckoutTotal,
                 metodoPago: currentPaymentMethod,
                 fecha: new Date().toLocaleString(),
                 tipo: saleType,
                 detalles: det.join(', '),
-                items: items,          // <-- Ahora viajan los precios y los IDs de los productos
+                items: items,          
                 nota: noteText,
                 infoRetiro: pi,
                 entregado: (saleType === 'Mostrador')
@@ -1614,7 +1283,6 @@ async function subirTodoASupabase() {
         .then(respuesta => respuesta.json())
         .then(datos => console.log("¡Render respondió!", datos))
         .catch(error => console.error("Error comunicando con la nube:", error));
-        // --------------------------------------------------------------
 
         closeCheckout();
         clearCart();
@@ -1624,9 +1292,6 @@ async function subirTodoASupabase() {
         document.getElementById('pos-client-search').value = "";
     }
 
-    // -------------------------------------------------------------
-    // 9.11 MENSAJE PARA CLIENTE (Plantilla de WhatsApp)
-    // -------------------------------------------------------------
     function viewOrderMsg(id) {
         const sale = db.sales.find(s => s.id === id);
         if (!sale) return;
@@ -1650,9 +1315,6 @@ async function subirTodoASupabase() {
         alert("Copiado al portapapeles");
     }
 
-    // -------------------------------------------------------------
-    // 9.12 MODO EDICIÓN DE PEDIDOS (Carga en carrito)
-    // -------------------------------------------------------------
     function loadSaleForEdit(id) {
         if (Object.keys(cart).length > 0 && !editingSaleId) {
             if (!confirm("⚠️ Hay productos en el carrito actual. Si editas este pedido, se perderá lo que estabas cargando. ¿Continuar?")) return;
@@ -1661,10 +1323,7 @@ async function subirTodoASupabase() {
         const sale = db.sales.find(s => s.id === id);
         if (!sale) return;
 
-        // 1. Resetea carrito
         cart = {};
-
-        // 2. Rellena carrito con items del pedido (por nombre)
         sale.items.forEach(item => {
             const prod = db.products.find(p => p.name === item.name);
             if (prod) {
@@ -1674,15 +1333,13 @@ async function subirTodoASupabase() {
             }
         });
 
-        // 3. Marca entorno de edición
         editingSaleId = sale.id;
         saleType = sale.type;
         currentPaymentMethod = sale.method;
         document.getElementById('pos-client-search').value = sale.client;
 
-        // 4. Feedback visual
         renderCart();
-        showSection('pos'); // vuelve a la pantalla de venta
+        showSection('pos');
 
         document.getElementById('editing-banner').style.display = 'block';
         document.getElementById('btn-checkout-main').innerText = "🔄 ACTUALIZAR PEDIDO";
@@ -1704,53 +1361,32 @@ async function subirTodoASupabase() {
         renderCart();
     }
 
-    // -------------------------------------------------------------
-    // 9.13 COCINA: RESUMEN DE PRODUCCIÓN Y PENDIENTES
-    // -------------------------------------------------------------
     function renderKitchen() {
         const search = document.getElementById('kitchen-search').value.toLowerCase();
         const ords = db.sales
             .filter(s => s.type === 'TakeAway')
             .sort((a, b) => new Date(a.pickupSort) - new Date(b.pickupSort));
 
-        // Resumen agregando cantidades por producto
         let tot = {};
-        ords
-            .filter(o => !o.pickedUp)
-            .forEach(o => o.items.forEach(i => tot[i.name] = (tot[i.name] || 0) + i.qty));
+        ords.filter(o => !o.pickedUp).forEach(o => o.items.forEach(i => tot[i.name] = (tot[i.name] || 0) + i.qty));
 
         document.getElementById('kitchen-summary').innerHTML =
             Object.keys(tot).length
-                ? Object.entries(tot).map(([n, q]) =>
-                    `<div class="prod-item-summary"><span>${n}</span><span>${q}</span></div>`
-                  ).join('')
+                ? Object.entries(tot).map(([n, q]) => `<div class="prod-item-summary"><span>${n}</span><span>${q}</span></div>`).join('')
                 : "<p>Nada pendiente.</p>";
 
-        // Pendientes filtrados
-        const pend = ords.filter(o =>
-            !o.pickedUp &&
-            (o.client.toLowerCase().includes(search) || o.details.toLowerCase().includes(search))
-        );
+        const pend = ords.filter(o => !o.pickedUp && (o.client.toLowerCase().includes(search) || o.details.toLowerCase().includes(search)));
 
         document.getElementById('kitchen-orders-pending').innerHTML =
-            pend.length
-                ? pend.map(o => createOrderCard(o)).join('')
-                : '<p style="color:#999">No hay pendientes.</p>';
+            pend.length ? pend.map(o => createOrderCard(o)).join('') : '<p style="color:#999">No hay pendientes.</p>';
 
-        // Últimos 10 completados
         document.getElementById('kitchen-orders-completed').innerHTML =
-            ords.filter(o => o.pickedUp)
-                .slice(0, 10)
-                .map(o => createOrderCard(o, true))
-                .join('');
+            ords.filter(o => o.pickedUp).slice(0, 10).map(o => createOrderCard(o, true)).join('');
     }
 
     function createOrderCard(o, done = false) {
-        const d = new Date(o.pickupSort).toLocaleDateString('es-AR', {
-            weekday:'long', day:'numeric', hour:'2-digit', minute:'2-digit'
-        });
+        const d = new Date(o.pickupSort).toLocaleDateString('es-AR', { weekday:'long', day:'numeric', hour:'2-digit', minute:'2-digit' });
         const paid = o.method !== 'Pendiente';
-
         let btn;
         if (done) {
             btn = '<div style="text-align:right;color:green">✅ Retirado</div>';
@@ -1759,7 +1395,6 @@ async function subirTodoASupabase() {
                 ? `<button onclick="markAsPickedUp(${o.id})" class="btn btn-success" style="width:100%">✅ Entregar (Pago)</button>`
                 : `<button onclick="payAndPickup(${o.id})" class="btn btn-primary" style="width:100%">💵 Cobrar y Entregar</button>`;
         }
-
         return `
             <div class="order-card ${(!paid && !done) ? 'pending' : ''} ${done ? 'completed' : ''}">
                 <div style="display:flex;justify-content:space-between">
@@ -1793,9 +1428,6 @@ async function subirTodoASupabase() {
         openCheckoutModal(sale);
     }
 
-    // -------------------------------------------------------------
-    // 9.14 TABLA DE VENTAS (Historial y acciones)
-    // -------------------------------------------------------------
     function renderSalesTable() {
         document.getElementById('sales-table-body').innerHTML =
             db.sales.slice(0, 100).map(s => `
@@ -1828,9 +1460,6 @@ async function subirTodoASupabase() {
         }
     }
 
-    // -------------------------------------------------------------
-    // 9.15 CIERRE DE CAJA (Totales del día)
-    // -------------------------------------------------------------
     function updateReport() {
         const t = new Date().toLocaleDateString();
         let s = {Efectivo:0, 'Mercado Pago':0, Transferencia:0, Pendiente:0};
@@ -1848,9 +1477,6 @@ async function subirTodoASupabase() {
         document.getElementById('grand-total').innerText    = formatMoney(Object.values(s).reduce((a,b) => a + b, 0));
     }
 
-    // -------------------------------------------------------------
-    // 9.16 INFORMES (Top productos y clientes)
-    // -------------------------------------------------------------
     function renderAnalytics() {
         let p = {}, c = {};
 
@@ -1864,18 +1490,8 @@ async function subirTodoASupabase() {
         const prodEntries = Object.entries(p).sort((a, b) => b[1] - a[1]);
         const clientEntries = Object.entries(c).sort((a, b) => b[1] - a[1]);
 
-        renderBars(
-            'report-top-products',
-            prodEntries.slice(0, 5),
-            prodEntries[0]?.[1],
-            ' u.'
-        );
-        renderBars(
-            'report-top-clients',
-            clientEntries.slice(0, 5),
-            clientEntries[0]?.[1],
-            '$'
-        );
+        renderBars('report-top-products', prodEntries.slice(0, 5), prodEntries[0]?.[1], ' u.');
+        renderBars('report-top-clients', clientEntries.slice(0, 5), clientEntries[0]?.[1], '$');
     }
 
     function renderBars(el, d, m, s) {
@@ -1895,18 +1511,11 @@ async function subirTodoASupabase() {
                 : '<p>Sin datos.</p>';
     }
 
-    // -------------------------------------------------------------
-    // 9.17 CRUD DE PRODUCTOS
-    // -------------------------------------------------------------
     function addProduct() {
         const n = document.getElementById('prod-name').value;
         const p = document.getElementById('prod-price').value;
         if (n && p) {
-            db.products.push({
-                id: Date.now(),
-                name: n,
-                price: parseFloat(p)
-            });
+            db.products.push({ id: Date.now(), name: n, price: parseFloat(p) });
             saveDB();
             renderProductsTable();
             renderProductsPOS();
@@ -1942,7 +1551,6 @@ async function subirTodoASupabase() {
     function editProduct(id) {
         const p = db.products.find(x => x.id === id);
         if (!p) return;
-
         const n = prompt("Nombre:", p.name);
         if (n) {
             const pr = prompt("Precio:", p.price);
@@ -1956,18 +1564,11 @@ async function subirTodoASupabase() {
         }
     }
 
-    // -------------------------------------------------------------
-    // 9.18 CRUD DE CLIENTES
-    // -------------------------------------------------------------
     function addClient() {
         const n = document.getElementById('client-name').value;
         const p = document.getElementById('client-phone').value;
         if (n) {
-            db.clients.push({
-                id: Date.now(),
-                name: n,
-                phone: p
-            });
+            db.clients.push({ id: Date.now(), name: n, phone: p });
             saveDB();
             renderClientsTable();
             renderClientSearchList();
@@ -2003,7 +1604,6 @@ async function subirTodoASupabase() {
     function editClient(id) {
         const c = db.clients.find(x => x.id === id);
         if (!c) return;
-
         const n = prompt("Nombre:", c.name);
         if (n) {
             c.name = n;
@@ -2018,11 +1618,7 @@ async function subirTodoASupabase() {
         const n = document.getElementById('modal-client-name').value;
         const phone = document.getElementById('modal-client-phone').value;
         if (n) {
-            db.clients.push({
-                id: Date.now(),
-                name: n,
-                phone: phone
-            });
+            db.clients.push({ id: Date.now(), name: n, phone: phone });
             saveDB();
             document.getElementById('pos-client-search').value = n;
             document.getElementById('pos-client-list').style.display = 'none';
@@ -2032,11 +1628,7 @@ async function subirTodoASupabase() {
         }
     }
 
-    // -------------------------------------------------------------
-    // 9.19 BOOTSTRAP DE LA APLICACIÓN
-    // -------------------------------------------------------------
     init();
 </script>
 </body>
 </html>
-
