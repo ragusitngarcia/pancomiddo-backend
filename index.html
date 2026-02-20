@@ -1182,6 +1182,7 @@
             if (pagado < currentCheckoutTotal) return alert("Monto insuficiente");
         }
 
+        // Pagar deuda pendiente (Cocina)
         if (pendingOrderIdToPay) {
             const idx = db.sales.findIndex(s => s.id === pendingOrderIdToPay);
             if (idx !== -1) {
@@ -1192,6 +1193,22 @@
                 renderKitchen();
                 renderSalesTable();
                 updateReport();
+
+                // Sincronizar pago con la nube
+                const o = db.sales[idx];
+                fetch(`https://pancomiddo-backend.onrender.com/actualizar-venta/${o.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        cliente_id: db.clients.find(c => c.name === o.client)?.id || null,
+                        total: o.total,
+                        metodoPago: o.method,
+                        tipo: o.type,
+                        nota: o.note,
+                        infoRetiro: o.pickupInfo,
+                        entregado: true
+                    })
+                }).catch(err => console.error(err));
             }
             closeCheckout();
             alert("¡Listo!");
@@ -1199,8 +1216,6 @@
         }
 
         let cli = document.getElementById('pos-client-search').value || "Mostrador";
-        
-        // --- BUSCAMOS EL ID NUMÉRICO DEL CLIENTE PARA LA BD ---
         let clienteObjeto = db.clients.find(c => c.name === cli);
         let clienteId = clienteObjeto ? clienteObjeto.id : null; 
         
@@ -1210,7 +1225,6 @@
         for (const [id, q] of Object.entries(cart)) {
             const p = db.products.find(x => x.id == id);
             if (p) {
-                // --- MANDAMOS ID Y PRECIO PARA LA NUBE, PERO DEJAMOS EL NOMBRE PARA EL HTML ---
                 items.push({ id: p.id, price: p.price, name: p.name, qty: q });
                 det.push(`${p.name} (x${q})`);
             }
@@ -1225,6 +1239,7 @@
 
         const noteText = document.getElementById('sale-note').value;
 
+        // EDICIÓN DE VENTA EXISTENTE
         if (editingSaleId) {
             const idx = db.sales.findIndex(s => s.id === editingSaleId);
             if (idx !== -1) {
@@ -1241,10 +1256,30 @@
                     db.sales[idx].pickupSort = sd;
                 }
             }
-            alert("✅ Pedido Actualizado");
+            
+            // Sincronizar Edición
+            fetch(`https://pancomiddo-backend.onrender.com/actualizar-venta/${editingSaleId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cliente_id: clienteId,
+                    total: currentCheckoutTotal,
+                    metodoPago: currentPaymentMethod,
+                    tipo: saleType,
+                    items: items, 
+                    nota: noteText,
+                    infoRetiro: pi,
+                    entregado: (saleType === 'Mostrador')
+                })
+            }).catch(err => console.error(err));
+            
+            alert("✅ Pedido Actualizado en local y nube");
+
+        // NUEVA VENTA
         } else {
+            const newSaleId = Date.now();
             db.sales.unshift({
-                id: Date.now(),
+                id: newSaleId,
                 date: new Date().toLocaleString(),
                 timestamp: new Date(),
                 type: saleType,
@@ -1258,32 +1293,30 @@
                 note: noteText,
                 pickedUp: (saleType === 'Mostrador')
             });
-            alert("¡Venta Registrada!");
+
+            // Sincronizar Nueva
+            fetch('https://pancomiddo-backend.onrender.com/guardar-venta', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: newSaleId,
+                    cliente_id: clienteId, 
+                    total: currentCheckoutTotal,
+                    metodoPago: currentPaymentMethod,
+                    fecha: new Date().toLocaleString(),
+                    tipo: saleType,
+                    detalles: det.join(', '),
+                    items: items,          
+                    nota: noteText,
+                    infoRetiro: pi,
+                    entregado: (saleType === 'Mostrador')
+                })
+            }).catch(err => console.error(err));
+
+            alert("¡Venta Registrada en local y nube!");
         }
 
         saveDB();
-
-        // --- ENVÍO AL SERVIDOR EN RENDER ---
-        fetch('https://pancomiddo-backend.onrender.com/guardar-venta', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                cliente_id: clienteId, 
-                total: currentCheckoutTotal,
-                metodoPago: currentPaymentMethod,
-                fecha: new Date().toLocaleString(),
-                tipo: saleType,
-                detalles: det.join(', '),
-                items: items,          
-                nota: noteText,
-                infoRetiro: pi,
-                entregado: (saleType === 'Mostrador')
-            })
-        })
-        .then(respuesta => respuesta.json())
-        .then(datos => console.log("¡Render respondió!", datos))
-        .catch(error => console.error("Error comunicando con la nube:", error));
-
         closeCheckout();
         clearCart();
         updateReport();
@@ -1418,6 +1451,21 @@
                 saveDB();
                 renderKitchen();
                 renderSalesTable();
+
+                // Sincronizar estado 'entregado' con la nube
+                fetch(`https://pancomiddo-backend.onrender.com/actualizar-venta/${o.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        cliente_id: db.clients.find(c => c.name === o.client)?.id || null,
+                        total: o.total,
+                        metodoPago: o.method,
+                        tipo: o.type,
+                        nota: o.note,
+                        infoRetiro: o.pickupInfo,
+                        entregado: true
+                    })
+                }).catch(err => console.error(err));
             }
         }
     }
@@ -1457,6 +1505,11 @@
             renderSalesTable();
             renderKitchen();
             updateReport();
+
+            // Sincronizar borrado con la nube
+            fetch(`https://pancomiddo-backend.onrender.com/borrar-venta/${id}`, {
+                method: 'DELETE'
+            }).catch(err => console.error("Error al borrar en nube", err));
         }
     }
 
