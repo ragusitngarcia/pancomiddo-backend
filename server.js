@@ -18,19 +18,21 @@ app.get('/', (req, res) => {
     res.send('¡El servidor está online y tiene las llaves de Supabase!');
 });
 
-// --- RUTA DE VENTAS (Ajustada temporalmente para la nueva BD) ---
+// --- RUTA DE VENTAS (Versión Relacional Definitiva) ---
 app.post('/guardar-venta', async (req, res) => {
     const venta = req.body;
     console.log("¡Nueva venta recibida desde el HTML!", venta);
     
-    // ATENCIÓN: Ajustamos esto para que coincida con tu nueva estructura BIGINT.
-    // Todavía no estamos guardando el cliente ni los ítems exactos (lo haremos
-    // en el próximo paso una vez que tus productos y clientes ya estén en la nube).
-    const { data, error } = await supabase
+    // 1. Generamos un ID único para esta venta usando la fecha/hora
+    const saleId = Date.now(); 
+
+    // 2. Guardamos la "Cabecera" en la tabla 'sales'
+    const { error: errorVenta } = await supabase
         .from('sales')
         .insert([
             { 
-                id: Date.now(),
+                id: saleId,
+                client_id: venta.cliente_id, // ¡Ahora recibimos el ID, no el nombre!
                 total: venta.total, 
                 payment_method: venta.metodoPago,
                 sale_type: venta.tipo,
@@ -40,13 +42,31 @@ app.post('/guardar-venta', async (req, res) => {
             }
         ]);
 
-    if (error) {
-        console.error("Error guardando en la caja fuerte:", error);
-        return res.status(500).json({ error: "Fallo al guardar en BD" });
+    if (errorVenta) {
+        console.error("Error guardando cabecera de venta:", errorVenta);
+        return res.status(500).json({ error: "Fallo al guardar la venta" });
     }
 
-    console.log("¡Venta guardada en Supabase con éxito!");
-    res.json({ mensaje: "Guardado 100% exitoso en BD", status: "ok" });
+    // 3. Guardamos el "Detalle" en la tabla 'sale_items'
+    if (venta.items && venta.items.length > 0) {
+        // Armamos la listita para Supabase
+        const saleItems = venta.items.map(item => ({
+            sale_id: saleId,
+            product_id: item.id, // Necesitamos el ID del producto
+            quantity: item.qty,
+            unit_price: item.price,
+            subtotal: item.qty * item.price
+        }));
+
+        const { error: errorItems } = await supabase
+            .from('sale_items')
+            .insert(saleItems);
+
+        if (errorItems) console.error("Error guardando ítems:", errorItems);
+    }
+
+    console.log("¡Venta y detalles guardados en Supabase con éxito!");
+    res.json({ mensaje: "Ticket completo guardado en BD", status: "ok" });
 });
 
 // --- NUEVAS RUTAS PARA LA MIGRACIÓN INICIAL ---
@@ -79,3 +99,4 @@ app.post('/migrar-producto', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
+
