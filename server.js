@@ -19,7 +19,9 @@ app.get('/', (req, res) => {
 // 1. RUTA: GUARDAR VENTA NUEVA
 app.post('/guardar-venta', async (req, res) => {
     const venta = req.body;
-    const saleId = Date.now(); 
+    
+    // ¡LA MAGIA ESTÁ ACÁ! Ahora usamos el ID exacto que mandó Netlify
+    const saleId = venta.id; 
 
     const { error: errorVenta } = await supabase.from('sales').insert([{ 
         id: saleId,
@@ -32,7 +34,10 @@ app.post('/guardar-venta', async (req, res) => {
         picked_up: venta.entregado
     }]);
 
-    if (errorVenta) return res.status(500).json({ error: "Fallo al guardar" });
+    if (errorVenta) {
+        console.error("Error guardando venta:", errorVenta);
+        return res.status(500).json({ error: "Fallo al guardar" });
+    }
 
     if (venta.items && venta.items.length > 0) {
         const saleItems = venta.items.map(item => ({
@@ -78,7 +83,7 @@ app.put('/actualizar-venta/:id', async (req, res) => {
 
     if (errCab) return res.status(500).json({ error: "Fallo al actualizar cabecera" });
 
-    // B. Si mandan ítems (edición completa), reemplazamos los viejos
+    // B. Reemplazamos los ítems viejos por los nuevos
     if (venta.items) {
         await supabase.from('sale_items').delete().eq('sale_id', saleId); 
         
